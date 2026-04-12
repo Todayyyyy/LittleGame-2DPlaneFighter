@@ -1,0 +1,29 @@
+# --- Visual Studio 临时文件和编译产物 ---
+.vs/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+*.exe
+*.pdb
+*.obj
+*.log
+*.tlog
+*.lastbuildstate
+*.idb
+*.intermediate.manifest
+
+# --- 预编译头和数据库 ---
+*.pch
+*.ipch
+*.sdf
+*.VC.db
+*.VC.opendb
+
+# --- 个人配置（不要传给另一台电脑） ---
+*.suo
+*.user
+*.sln.docstates
+
+# --- 外部库（如 Wwise 或 SDL 的临时缓存） ---
+.cache/
