@@ -13,6 +13,9 @@ ClassicPlaneFight is a simple 2D game, developed by SDL3 and C++.
 #include "Meteorite.h"
 #include "Bullet.h"	
 #include "CollisionCheck.h"
+#include "AudioManager.h"
+#include <algorithm> 
+#include <cmath>
 
 
 //初始化窗口和渲染器。
@@ -39,6 +42,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
 {
 	SDL_Surface* surface = NULL;
 	char* png_path = NULL;
+	char* assets_path = NULL;
 
 	// 初始化 SDL 的视频子系统 和 手柄子系统
 	if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD)) {
@@ -80,6 +84,15 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
 
 	//初始化时间
 	lastSpawnTime = SDL_GetTicks();
+
+	//音频系统初始化
+	SDL_asprintf(&assets_path, "%sassets/laser.wav", SDL_GetBasePath());
+	AudioEngine::GetInstance().Initialize();
+	AudioEngine::GetInstance().LoadSound("laser", assets_path);
+	SDL_asprintf(&assets_path, "%sassets/boom.wav", SDL_GetBasePath());
+	AudioEngine::GetInstance().LoadSound("boom", assets_path);
+	SDL_free(assets_path);
+
 	return SDL_APP_CONTINUE;
 }
 
@@ -134,11 +147,8 @@ SDL_AppResult SDL_AppIterate(void* appstate)
 
 	//生成陨石。
 	if (now - lastSpawnTime > SPAWN_INTERVAL_MS + SDL_rand(1000)) {
-		// 算出一个随机的 X 坐标 (保证在屏幕宽度范围内)
 		float randomX = SDL_rand(gameManager.GetScreenWidth() - 10) * 1.0f; // 10 是陨石的宽度，确保它不会生成在屏幕外面
-		// 造一颗新陨石，推入数组
 		MeteoritesLists.push_back(new Meteorite(1, randomX, Scale));
-		// 重置计时器，开始等下一个 2 秒
 		lastSpawnTime = now;
 	}
 	//陨石更新逻辑
@@ -152,8 +162,7 @@ SDL_AppResult SDL_AppIterate(void* appstate)
 	//3.子弹
 	if (newBullet) {
 		BulletsLists.push_back(newBullet);
-		// 【老兵提醒】：这里是触发音频的最佳时机！
-		// AudioEngine::GetInstance().PostEvent("Play_Laser_SFX");
+		AudioEngine::GetInstance().PlaySound3D("laser", player_plane->x, player_plane->y, gameManager.GetScreenWidth() / 2, player_plane->y);
 	}
 
 	for (auto* bullet : BulletsLists) {
@@ -177,8 +186,14 @@ SDL_AppResult SDL_AppIterate(void* appstate)
 		for (auto& meteor : MeteoritesLists) {
 			if (meteor->IsDead()) continue;
 			if (CheckCollision_AABB(bullet, meteor)) {
-				bullet->TakeDamage(); 
-				meteor->TakeDamage(); 
+				bullet->TakeDamage();
+				meteor->TakeDamage();
+				// 播放爆炸音效
+				AudioEngine::GetInstance().PlaySound3D(
+					"boom",
+					meteor->x, meteor->y,                      
+					gameManager.GetScreenWidth() / 2,player_plane->y
+				);
 			}
 		}
 	}
@@ -240,12 +255,17 @@ SDL_AppResult SDL_AppIterate(void* appstate)
 		}
 	}
 
+	//3.音频系统
+	AudioEngine::GetInstance().AudioEngineUpdate();
+
 	return SDL_APP_CONTINUE;
 
 }
 
 void SDL_AppQuit(void* appstate, SDL_AppResult result)
 {
+
 	SDL_DestroyTexture(texture);
 	/* SDL will clean up the window/renderer for us. */
+	AudioEngine::GetInstance().Shutdown();
 }

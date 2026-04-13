@@ -139,6 +139,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AudioManager.h" />
     <ClInclude Include="Bullet.h" />
     <ClInclude Include="CollisionCheck.h" />
     <ClInclude Include="GameEntity.h" />

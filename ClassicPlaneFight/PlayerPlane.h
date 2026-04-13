@@ -36,6 +36,7 @@ public:
 		Sint16 triggerValue = SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_RIGHT_TRIGGER);
 		if (triggerValue > 10000 && (now - _lastFireTime >= _fireInterval)) {
 			_lastFireTime = now;
+
 			return new Bullet(this->x + (this->w / 2.0f), this->y + 5.0f);
 		}
 		return nullptr;
